@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         No Fingerprint
-// @version      0.1
+// @version      0.2
 // @description  Block browser fingerprinting attempts.
 // @author       Sam0230
 // @match        *://*/*
@@ -64,23 +64,26 @@ script.textContent = "(" + (function() {
 		window.Date.prototype.toTimeString				=	function () { return ""; }							;
 	})();
 	(function () { // navigator
+		let a;
 		let fakeNavigator = {};
-		fakeNavigator.appCodeName						=
-		fakeNavigator.appName							=
-		fakeNavigator.appVersion						=
-		fakeNavigator.platform							=
+	//	fakeNavigator.appCodeName						=
+	//	fakeNavigator.appName							=
+	//	fakeNavigator.appVersion						=
+	//	fakeNavigator.platform							=
 		fakeNavigator.product							=
 		fakeNavigator.productSub						=
-		fakeNavigator.userAgent							=
+	//	fakeNavigator.userAgent							=
 		fakeNavigator.vendor							=
-		fakeNavigator.vendorSub							=	"";
+		fakeNavigator.vendorSub							=
+		a = "";
 		fakeNavigator.deviceMemory						=
 		fakeNavigator.hardwareConcurrency				=
-		fakeNavigator.maxTouchPoints					=	0;
+		fakeNavigator.maxTouchPoints					=
+		a = 0;
 		fakeNavigator.bluetooth							=
 		fakeNavigator.clipboard							=
 		fakeNavigator.connection						=
-		fakeNavigator.cookieEnabled						=
+	//	fakeNavigator.cookieEnabled						=
 		fakeNavigator.credentials						=
 		fakeNavigator.doNotTrack						=
 		fakeNavigator.geolocation						=
@@ -91,39 +94,42 @@ script.textContent = "(" + (function() {
 		fakeNavigator.mediaCapabilities					=
 		fakeNavigator.mediaDevices						=
 		fakeNavigator.mediaSession						=
-		fakeNavigator.mimeTypes							=
+	//	fakeNavigator.mimeTypes							=
 		fakeNavigator.onLine							=
 		fakeNavigator.permissions						=
-		fakeNavigator.plugins							=
 		fakeNavigator.presentation						=
 		fakeNavigator.scheduling						=
 		fakeNavigator.serviceWorker						=
-		fakeNavigator.storage							=
+	//	fakeNavigator.storage							=
 		fakeNavigator.usb								=
 		fakeNavigator.userActivation					=
 		fakeNavigator.userAgentData						=
 		fakeNavigator.wakeLock							=
 		fakeNavigator.webkitPersistentStorage			=
 		fakeNavigator.webkitTemporaryStorage			=
-		fakeNavigator.xr								=	{};
-		fakeNavigator.userAgent 			= navigator.userAgent;
-		fakeNavigator.hardwareConcurrency	= 4;
-		fakeNavigator.deviceMemory			= undefined;
-		// fakeNavigator.platform = "Win32";
-		/*
-		fakeNavigator.plugins = navigator.plugins;
-		for (let i = 0; i < fakeNavigator.plugins.length && 0; i++) {
-			Object.defineProperty(fakeNavigator.plugins, i, {
-				value: undefined,
-				writable: false,
-				enumerable: false
-			});
+		fakeNavigator.xr								=
+		a = {};
+		fakeNavigator.hardwareConcurrency				= 4;
+		fakeNavigator.deviceMemory						= "undefined";
+	//	fakeNavigator.platform 							= "Win32";
+		fakeNavigator.plugins							= [];
+		setValue(fakeNavigator.plugins, "item",			function item() { return null; },		false);
+		setValue(fakeNavigator.plugins, "namedItem",	function namedItem() { return null; },	false);
+		setValue(fakeNavigator.plugins, "refresh",		function refresh() { return null; },	false);
+		for (let i in window.navigator) {
+			if (fakeNavigator[i] !== undefined) {
+				try {
+					Object.defineProperty(window.navigator, i, {
+						get: function () {
+							if (fakeNavigator[i] === "undefined") {
+								return undefined;
+							}
+							return fakeNavigator[i];
+						}
+					});
+				} catch (e) {}
+			}
 		}
-		setValue(window.PluginArray.prototype, "length", 0, false);
-		setValue(window.PluginArray.prototype, "namedItem", function namedItem() { return null; }, false);
-		setValue(window.PluginArray.prototype, "item", function item() { return null; }, false);
-		*/
-		Object.defineProperty(window, "navigator", { get: function (){ return fakeNavigator; } });
 	})();
 	(function () { // Screen size
 		let screenSize = [1920, 1080];
@@ -194,11 +200,8 @@ script.textContent = "(" + (function() {
 		let origGetImageData	= CanvasRenderingContext2D.prototype.getImageData;
 		let origReadPixels1		= WebGLRenderingContext.prototype.readPixels;
 		let origReadPixels2		= WebGL2RenderingContext.prototype.readPixels;
-		let origBufferData1		= WebGLRenderingContext.prototype.bufferData;
-		let origBufferData2		= WebGL2RenderingContext.prototype.bufferData;
 		let origToDataURL		= HTMLCanvasElement.prototype.toDataURL;
 		let origToBlob			= HTMLCanvasElement.prototype.toBlob;
-		let TypedArray			= Uint8Array.prototype.__proto__.constructor;
 		let getImageData = function getImageData() {
 			let imageData = origGetImageData.apply(this, arguments);
 			for (let i = 0; i < imageData.data.length; i++) {
@@ -208,47 +211,11 @@ script.textContent = "(" + (function() {
 		};
 		CanvasRenderingContext2D.prototype.getImageData = getImageData;
 		CanvasRenderingContext2D.prototype.getImageData.toString = origGetImageData.toString.bind(origGetImageData);
-		let bufferData1 = function (arg1, arg2) {
-			let output, ret;
-			if (typeof (arg2) === "number") {
-				return origBufferData1.apply(this, arguments);
-			} else {
-				if (arg2 instanceof TypedArray) {
-					output = arg2;
-				} else if ((arg2 instanceof ArrayBuffer) || (arg2 instanceof SharedArrayBuffer)) {
-					output = new Uint8Array(arg2);
-				}
-				ret = origBufferData1.apply(this, arguments);
-			}
-			for (let i = 0; i < output.length; i++) {
-				output[i] += Math.round((Math.random() - 0.5) * 4.9);
-			}
-			return ret;
-		};
+		let origIsPointInPath = CanvasRenderingContext2D.prototype.isPointInPath;
 		CanvasRenderingContext2D.prototype.isPointInPath = function isPointInPath() {
 			return false;
 		};
-		WebGLRenderingContext.prototype.bufferData = bufferData1;
-		WebGLRenderingContext.prototype.bufferData.toString = origBufferData1.toString.bind(origBufferData1);
-		let bufferData2 = function (arg1, arg2) {
-			let output, ret;
-			if (typeof (arg2) === "number") {
-				return origBufferData2.apply(this, arguments);
-			} else {
-				if (arg2 instanceof TypedArray) {
-					output = arg2;
-				} else if ((arg2 instanceof ArrayBuffer) || (arg2 instanceof SharedArrayBuffer)) {
-					output = new Uint8Array(arg2);
-				}
-				ret = origBufferData2.apply(this, arguments);
-			}
-			for (let i = 0; i < output.length; i++) {
-				output[i] += Math.round((Math.random() - 0.5) * 4.9);
-			}
-			return ret;
-		};
-		WebGL2RenderingContext.prototype.bufferData = bufferData2;
-		WebGL2RenderingContext.prototype.bufferData.toString = origBufferData2.toString.bind(origBufferData2);
+		CanvasRenderingContext2D.prototype.isPointInPath.toString = origIsPointInPath.toString.bind(origIsPointInPath);
 		let readPixels1 = function readPixels() {
 			origReadPixels1.apply(this, arguments);
 			let pixels = arguments[6];
@@ -276,12 +243,10 @@ script.textContent = "(" + (function() {
 			context.putImageData(imageData, 0, 0);
 			ret = origToDataURL.apply(this, arguments);
 			context.putImageData(origImageData, 0, 0);
-			context = null;
 			return ret;
 		};
 		let hookWebGLGetParameter = function (target) {
-			let origGetParameter = target.getParameter,
-			random = {
+			let random = {
 				"item": function (e) {
 					let rand = e.length * Math.random();
 					return e[Math.floor(rand)];
@@ -310,37 +275,37 @@ script.textContent = "(" + (function() {
 					return random.item(tmp);
 				}
 			};
-			Object.defineProperty(target, "getParameter", {
-				"value": function () {
-					if		(arguments[0] === 3415	) return 0;
-					else if	(arguments[0] === 3414	) return 24;
-					else if	(arguments[0] === 36348	) return 30;
-					else if	(arguments[0] === 7936	) return "WebKit";
-					else if	(arguments[0] === 37445	) return "Google Inc.";
-					else if	(arguments[0] === 7937	) return "WebKit WebGL";
-					else if	(arguments[0] === 3379	) return random.number([14, 15]);
-					else if	(arguments[0] === 36347	) return random.number([12, 13]);
-					else if	(arguments[0] === 34076	) return random.number([14, 15]);
-					else if	(arguments[0] === 34024	) return random.number([14, 15]);
-					else if	(arguments[0] === 3386	) return random.int([13, 14, 15]);
-					else if	(arguments[0] === 3413	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 3412	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 3411	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 3410	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 34047	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 34930	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 34921	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 35660	) return random.number([1, 2, 3, 4]);
-					else if	(arguments[0] === 35661	) return random.number([4, 5, 6, 7, 8]);
-					else if	(arguments[0] === 36349	) return random.number([10, 11, 12, 13]);
-					else if	(arguments[0] === 33902	) return random.float([0, 10, 11, 12, 13]);
-					else if	(arguments[0] === 33901	) return random.float([0, 10, 11, 12, 13]);
-					else if	(arguments[0] === 37446	) return random.item(["Graphics", "HD Graphics", "Intel(R) HD Graphics"]);
-					else if	(arguments[0] === 7938	) return random.item(["WebGL 1.0", "WebGL 1.0 (OpenGL)", "WebGL 1.0 (OpenGL Chromium)"]);
-					else if	(arguments[0] === 35724	) return random.item(["WebGL", "WebGL GLSL", "WebGL GLSL ES", "WebGL GLSL ES (OpenGL Chromium"]);
-					return origGetParameter.apply(this, arguments);
-				}
-			});
+			let origGetParameter = target.getParameter;
+			target.getParameter = function (a1) {
+				if (a1 === this.STENCIL_BITS							) { return 0;																						}
+				if (a1 === this.DEPTH_BITS								) { return 24;																						}
+				if (a1 === this.MAX_VARYING_VECTORS						) { return 30;																						}
+				if (a1 === this.VENDOR									) { return "WebKit";																				}
+				if (a1 === 37445										) { return "Google Inc.";																			}
+				if (a1 === this.RENDERER								) { return "WebKit WebGL";																			}
+				if (a1 === this.MAX_TEXTURE_SIZE						) { return random.number([14, 15]);																	}
+				if (a1 === this.MAX_VERTEX_UNIFORM_VECTORS				) { return random.number([12, 13]);																	}
+				if (a1 === this.MAX_CUBE_MAP_TEXTURE_SIZE				) { return random.number([14, 15]);																	}
+				if (a1 === this.MAX_RENDERBUFFER_SIZE					) { return random.number([14, 15]);																	}
+				if (a1 === this.MAX_VIEWPORT_DIMS						) { return random.int([13, 14, 15]);																}
+				if (a1 === this.ALPHA_BITS								) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.BLUE_BITS								) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.GREEN_BITS								) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.RED_BITS								) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === 34047										) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.MAX_TEXTURE_IMAGE_UNITS					) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.MAX_VERTEX_ATTRIBS						) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.MAX_VERTEX_TEXTURE_IMAGE_UNITS			) { return random.number([1, 2, 3, 4]);																}
+				if (a1 === this.MAX_COMBINED_TEXTURE_IMAGE_UNITS		) { return random.number([4, 5, 6, 7, 8]);															}
+				if (a1 === this.MAX_FRAGMENT_UNIFORM_VECTORS			) { return random.number([10, 11, 12, 13]);															}
+				if (a1 === this.ALIASED_LINE_WIDTH_RANGE				) { return random.float([0, 10, 11, 12, 13]);														}
+				if (a1 === this.ALIASED_POINT_SIZE_RANGE				) { return random.float([0, 10, 11, 12, 13]);														}
+				if (a1 === 37446										) { return random.item(["Graphics", "HD Graphics", "Intel(R) HD Graphics"]);						}
+				if (a1 === this.VERSION									) { return random.item(["WebGL 1.0", "WebGL 1.0 (OpenGL)", "WebGL 1.0 (OpenGL Chromium)"]);			}
+				if (a1 === this.SHADING_LANGUAGE_VERSION				) { return random.item(["WebGL", "WebGL GLSL", "WebGL GLSL ES", "WebGL GLSL ES (OpenGL Chromium"]);	}					
+				return origGetParameter.apply(this, arguments);
+			};
+			target.getParameter.toString = origGetParameter.toString.bind(origGetParameter);
 		};
 		hookWebGLGetParameter(WebGLRenderingContext.prototype);
 		hookWebGLGetParameter(WebGL2RenderingContext.prototype);
@@ -355,7 +320,6 @@ script.textContent = "(" + (function() {
 			context.putImageData(imageData, 0, 0);
 			return origToBlob.apply(this, [function (blob) {
 				context.putImageData(imageDataOrig, 0, 0);
-				context = null;
 				callback(blob);
 			}, type, encoderOptions]);
 		};
