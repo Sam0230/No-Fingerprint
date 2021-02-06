@@ -1,20 +1,24 @@
 {
-	"content_scripts": [{
-		"all_frames": true,
-		"js": [ "no-fingerprint.user.js" ],
-		"match_about_blank": true,
-		"matches": [ "*://*/*" ],
-		"run_at": "document_start"
-	}],
+	"manifest_version": 2,
+	"short_name": "no-fingerprint",
+	"version": "0.2",
+	"name": "No Fingerprint",
 	"description": "Block browser fingerprinting attempts.",
 	"homepage_url": "https://github.com/Sam0230/No-Fingerprint",
 	"icons": {
 		"1000": "No Fingerprint.png"
 	},
-	"key": "MTIz",
-	"manifest_version": 2,
-	"name": "No Fingerprint",
+	"browser_action": {
+	  "default_icon": {
+		"1000": "No Fingerprint.png"
+	  }
+	},
 	"permissions": [],
-	"short_name": "no-fingerprint",
-	"version": "0.1"
+	"content_scripts": [{
+		"all_frames": true,
+		"match_about_blank": true,
+		"run_at": "document_start",
+		"matches": [ "*://*/*" ],
+		"js": [ "no-fingerprint.user.js" ]
+	}]
 }
